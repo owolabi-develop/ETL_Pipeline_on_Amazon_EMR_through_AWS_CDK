@@ -2,27 +2,58 @@
 import os
 
 import aws_cdk as cdk
+from aws_cdk import Tags
+from decouple import config
 
-from aws_batch_processing_with_py_spark_on_emr.aws_batch_processing_with_py_spark_on_emr_stack import AwsBatchProcessingWithPySparkOnEmrStack
+from bucket_deployment_stack.bucket_deployment_stack import BucketDeploymentStack
+from emr_cluster_stack.emr_cluster_stack import EMRClusterStack
+from security_stack.security_stack import SecurityStack
 
+# Set global variables
+ID = config('id')
+PRIMARY_BUCKET = f"emr-pipeline-{ID}"
+LOG_BUCKET = f"emr-logs-{ID}"
+SCRIPT_LOCATION = f"{PRIMARY_BUCKET}/scripts/"
+VPC_NAME = f"emr-pipeline-vpc-{ID}"
 
+env_USA = cdk.Environment(account="143176219551", region="us-west-2")
 app = cdk.App()
-AwsBatchProcessingWithPySparkOnEmrStack(app, "AwsBatchProcessingWithPySparkOnEmrStack",
-    # If you don't specify 'env', this stack will be environment-agnostic.
-    # Account/Region-dependent features and context lookups will not work,
-    # but a single synthesized template can be deployed anywhere.
 
-    # Uncomment the next line to specialize this stack for the AWS Account
-    # and Region that are implied by the current CLI configuration.
+# Create Stacks
 
-    #env=cdk.Environment(account=os.getenv('CDK_DEFAULT_ACCOUNT'), region=os.getenv('CDK_DEFAULT_REGION')),
+security_stack = SecurityStack(
+    scope=app,
+    id="SecurityStack",
+    vpc_name=VPC_NAME,
+    env=env_USA
+)
 
-    # Uncomment the next line if you know exactly what Account and Region you
-    # want to deploy the stack to. */
 
-    #env=cdk.Environment(account='123456789012', region='us-east-1'),
+bucket_deployment_stack = BucketDeploymentStack(
+    scope=app,
+    construct_id=f"BucketDeploymentStack",
+    primary_bucket=PRIMARY_BUCKET,
+    log_bucket=LOG_BUCKET,
+    env=env_USA
+)
 
-    # For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html
-    )
+emr_cluster_stack = EMRClusterStack(
+    scope=app,
+    id=f"EMRClusterStack",
+    s3_log_bucket=LOG_BUCKET,
+    s3_script_bucket=PRIMARY_BUCKET,
+    vpc_name=f"SecurityStack/{VPC_NAME}",
+    env=env_USA
+)
+
+
+# Add dependencies
+# emr_cluster_stack.add_dependency(bucket_deployment_stack)
+# emr_cluster_stack.add_dependency(security_stack)
+
+
+# Add tags
+Tags.of(app).add("ProjectOwner", "owolabi akintan")
+Tags.of(app).add("Project", "EMR-ETL-Pipeline")
 
 app.synth()
