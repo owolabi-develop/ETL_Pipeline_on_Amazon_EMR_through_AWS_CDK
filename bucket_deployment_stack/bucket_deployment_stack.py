@@ -21,13 +21,13 @@ class BucketDeploymentStack(Stack):
         primary_bucket = s3.Bucket(
             self,
             id=primary_bucket_name,
-            bucket_name=log_bucket_name
+            bucket_name=primary_bucket_name
         )
  
         log_bucket = s3.Bucket(
             self,
-            id=log_bucket,
-            bucket_name=log_bucket
+            id=log_bucket_name,
+            bucket_name=log_bucket_name
         )
     
         data_deployment = s3deploy.BucketDeployment(self, "DeployData",

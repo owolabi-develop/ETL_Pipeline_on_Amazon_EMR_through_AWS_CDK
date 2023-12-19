@@ -7,7 +7,7 @@ CORE_INSTANCE_COUNT = 2
 MARKET = "ON_DEMAND"
 CLUSTER_NAME = "emr-pipeline-cluster"
 EMR_RELEASE="emr-6.10.0"
-SUBNET_ID ="subnet-0d0f61ccb5bd3ca19"
+SUBNET_ID ="subnet-06f0daffbab90693d"
 
 class EMRClusterStack(Stack):
     def __init__(
@@ -58,11 +58,12 @@ class EMRClusterStack(Stack):
                 )
             ],
         )
+        
         # emr job flow profile
         emr_job_flow_profile = iam.CfnInstanceProfile(
             self,
             "emr_job_flow_profile",
-            roles=["EMR_EC2_DefaultRole"],
+            roles=['default_profile_role'],
             instance_profile_name="emrJobFlowProfile_",
         )
 
@@ -77,7 +78,7 @@ class EMRClusterStack(Stack):
                     market=MARKET
                 ),
                 ec2_subnet_id=SUBNET_ID,
-                ec2_key_name="ProjectProAlexClark",
+                ec2_key_name="owolabiakintan",
                 keep_job_flow_alive_when_no_steps=True,
                 master_instance_group=emr.CfnCluster.InstanceGroupConfigProperty(
                     instance_count=1,
